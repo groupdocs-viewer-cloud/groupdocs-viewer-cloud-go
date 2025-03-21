@@ -77,4 +77,6 @@ type HtmlOptions struct {
 	ImageMaxWidth int32 `json:"ImageMaxWidth,omitempty"`
 	// Enables HTML content will be rendered to single page
 	RenderToSinglePage bool `json:"RenderToSinglePage,omitempty"`
+	// Allows to remove the JavaScript source code from the links in resultant HTML documents, when rendering input documents, which have the scripts. By default is enabled (true).
+	RemoveJavaScript bool `json:"RemoveJavaScript,omitempty"`
 }

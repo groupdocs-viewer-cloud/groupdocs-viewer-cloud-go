@@ -60,7 +60,7 @@ func NewConfiguration() *Configuration {
 	cfg := &Configuration{
 		BasePath:      "https://api.groupdocs.cloud/v2.0",
 		DefaultHeader: make(map[string]string),
-		UserAgent:     "Swagger-Codegen/24.8/go",
+		UserAgent:     "Swagger-Codegen/25.3/go",
 	}
 	return cfg
 }
