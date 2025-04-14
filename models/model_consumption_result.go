@@ -13,4 +13,6 @@ type ConsumptionResult struct {
 	Credit float32 `json:"Credit"`
 	// Amount of MBs processed
 	Quantity float32 `json:"Quantity"`
+	// Billed API calls number
+	BilledApiCalls float32 `json:"BilledApiCalls"`
 }
