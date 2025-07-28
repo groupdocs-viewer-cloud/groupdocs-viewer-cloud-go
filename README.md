@@ -1,73 +1,140 @@
-# GroupDocs.Viewer Cloud Go SDK
+# GroupDocs.Viewer Cloud SDK for Go
 
-Go package for communicating with the GroupDocs.Viewer Cloud API
+This repository contains the GroupDocs.Viewer Cloud SDK for Go source code. This SDK allows you to work with GroupDocs.Viewer Cloud REST APIs in your Go applications, enabling you to render documents in HTML, image, or PDF format, with the flexibility to render the whole document or a custom range of pages.
+
+## How to use the SDK?
+
+The complete source code is available in this repository. You can use it directly in your project or install it via Go modules. For more details, please visit our [documentation website](https://docs.groupdocs.cloud/display/viewercloud/Available+SDKs#AvailableSDKs-Go).
 
 ## Installation
 
-The package is available at [github.com](https://github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go). You can install it with:
+Install GroupDocs.Viewer Cloud SDK for Go using Go modules:
 
 ```shell
 go get github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go
 ```
 
-To add dependency to your app copy following into your go.mod and run `go mod tidy`:
+To add the dependency to your app, copy the following into your `go.mod` and run `go mod tidy`:
 
 ```go
 require (
- github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go v1.0.0
+    github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go latest
 )
 ```
 
 ## Getting Started
 
-Please follow the [installation](#installation) procedure and then run the following code:
+Below is an example demonstrating how to convert and download a document using GroupDocs.Viewer Cloud SDK for Go:
 
 ```go
 package main
 
 import (
- "context"
- "fmt"
+    "context"
+    "fmt"
+    "os"
 
- "github.com/antihax/optional"
- viewer "github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go"
- "golang.org/x/oauth2/clientcredentials"
+    viewer "github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go"
+    "golang.org/x/oauth2/clientcredentials"
 )
 
 func main() {
+    // Get Client Id and Client Secret from https://dashboard.groupdocs.cloud
+    conf := &clientcredentials.Config{
+        ClientID:     "YOUR_CLIENT_ID",
+        ClientSecret: "YOUR_CLIENT_SECRET",
+        TokenURL:     "https://api.groupdocs.cloud/connect/token",
+    }
 
- // Create an OAuth2 config using client_credentials grant type
- conf := &clientcredentials.Config{
-  ClientID:     "XXXX-XXXX-XXXX-XXXX",      // Your client_id
-  ClientSecret: "XXXXXXXXXXXXXXXX",          // Your client_secret
-  TokenURL:     "https://api.groupdocs.cloud/connect/token", // The token URL
-  Scopes:       []string{},                                  // Optional: specify any required scopes
- }
+    token, err := conf.Token(context.Background())
+    if err != nil {
+        fmt.Printf("Unable to retrieve token: %v\n", err)
+        return
+    }
 
- // Request the token
- token, err := conf.Token(context.Background())
- if err != nil {
-  fmt.Printf("Unable to retrieve token: %v", err)
- }
+    cfg := viewer.NewConfiguration()
+    client := viewer.NewAPIClient(cfg)
+    auth := context.WithValue(context.Background(), viewer.ContextAccessToken, token.AccessToken)
 
- // Output the access token
- fmt.Printf("Access Token: %s\n", token.AccessToken)
+    // Convert and download document as JPG
+    file, _ := os.Open("myfile.docx")
+    convertedFile, _, err := client.ViewApi.ConvertAndDownload(auth, "jpg", file, nil)
+    if err != nil {
+        fmt.Printf("Conversion error: %v\n", err)
+        return
+    }
+    fmt.Printf("Converted file: %v\n", convertedFile.Name())
+}
+```
 
- cfg := viewer.NewConfiguration()
- client := viewer.NewAPIClient(cfg)
- auth := context.WithValue(context.Background(), viewer.ContextAccessToken, token.AccessToken)
+Below is an example demonstrating how to upload a document, render it, and download the result using GroupDocs.Viewer Cloud SDK for Go:
 
-result, _, _ := client.InfoApi.GetSupportedFileFormats(auth)
+```go
+package main
 
- for _, format := range result.Formats {
-  fmt.Printf("%s (%s)\n", format.FileFormat, format.Extension)
- }
+import (
+    "context"
+    "fmt"
+    "os"
+
+    viewer "github.com/groupdocs-viewer-cloud/groupdocs-viewer-cloud-go"
+    "golang.org/x/oauth2/clientcredentials"
+)
+
+func main() {
+    conf := &clientcredentials.Config{
+        ClientID:     "YOUR_CLIENT_ID",
+        ClientSecret: "YOUR_CLIENT_SECRET",
+        TokenURL:     "https://api.groupdocs.cloud/connect/token",
+    }
+
+    token, err := conf.Token(context.Background())
+    if err != nil {
+        fmt.Printf("Unable to retrieve token: %v\n", err)
+        return
+    }
+
+    cfg := viewer.NewConfiguration()
+    client := viewer.NewAPIClient(cfg)
+    auth := context.WithValue(context.Background(), viewer.ContextAccessToken, token.AccessToken)
+
+    // Upload a file to cloud storage
+    file, _ := os.Open("myfile.docx")
+    uploadResult, _, err := client.FileApi.UploadFile(auth, "myfile.docx", file, nil)
+    if err != nil {
+        fmt.Printf("Upload error: %v\n", err)
+        return
+    }
+    fmt.Printf("Uploaded: %+v\n", uploadResult)
+
+    // Render it to HTML
+    viewOptions := viewer.ViewOptions{
+        FileInfo: &viewer.FileInfo{
+            FilePath: "myfile.docx",
+        },
+        ViewFormat: "HTML",
+        OutputPath: "myfile.html",
+    }
+    viewResult, _, err := client.ViewApi.CreateView(auth, viewOptions)
+    if err != nil {
+        fmt.Printf("Render error: %v\n", err)
+        return
+    }
+    fmt.Printf("View created: %+v\n", viewResult)
+
+    // Download the result
+    downloadedFile, _, err := client.FileApi.DownloadFile(auth, "myfile.html", nil)
+    if err != nil {
+        fmt.Printf("Download error: %v\n", err)
+        return
+    }
+    fmt.Printf("Downloaded file: %v\n", downloadedFile.Name())
 }
 ```
 
 ## Licensing
 
-GroupDocs.Viewer Cloud Go SDK licensed under [MIT License](LICENSE).
+GroupDocs.Viewer Cloud Go SDK is licensed under [MIT License](LICENSE).
 
 ## Resources
 
@@ -79,4 +146,4 @@ GroupDocs.Viewer Cloud Go SDK licensed under [MIT License](LICENSE).
 
 ## Contact Us
 
-Your feedback is very important to us. Please feel free to contact us using our [Support Forums](https://forum.groupdocs.cloud/c/viewer).
+Your feedback is very important to us. Please feel free to contact us using our [Support Forums](https://forum.groupdocs.cloud/c/viewer)
